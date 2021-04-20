@@ -7,7 +7,8 @@ const router = express.Router();
 
 router.get("/", (req: Request, res: Response) => {
   database.result(
-    "SELECT * FROM  produkte",
+    "SELECT produkte.produkt_id, produkte.bezeichnung, produkte.beschreibung, produkte.preis, produkte.inhaltsstoffe, produkte.allergene," +
+      "produkte.bildPfad, produkte.urlPfad, kategorie.kategorie FROM produkte JOIN kategorie ON produkte.fk_kategorie = kategorie.kategorie_id",
     null,
     (err: MysqlError, results) => {
       return res.send(results);
