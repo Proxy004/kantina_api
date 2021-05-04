@@ -5,10 +5,9 @@ import { MysqlError } from "mysql";
 
 const router = express.Router();
 
-router.get("/", (req: Request, res: Response) => {
+router.post("/", (req: Request, res: Response) => {
   searchInDatabase(
-    "SELECT produkte.produkt_id, produkte.bezeichnung, produkte.beschreibung, produkte.preis, produkte.inhaltsstoffe, produkte.allergene," +
-      "produkte.bildPfad, produkte.urlPfad, kategorie.kategorie FROM produkte JOIN kategorie ON produkte.fk_kategorie = kategorie.kategorie_id",
+    `INSERT INTO `benutzer`(`benutzer_id`, `vorname`, `nachname`, `e-mail`, `mitarbeiter?`) VALUES ()",
     null,
     (err: MysqlError, results) => {
       if (err) return res.status(500).json({ error: "Internal Server Error" });
