@@ -6,7 +6,6 @@ import { MysqlError } from "mysql";
 const router = express.Router();
 
 router.post("/newOrder", (req: Request, res: Response) => {
-  console.log("new");
   let today = new Date();
 
   let pricefromOrder: number = 0;
