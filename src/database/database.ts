@@ -5,9 +5,10 @@ const connectionCredentials: mysql.Pool = createPool({
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
+  multipleStatements: true,
 });
 
-const searchInDatabase = (
+const database = (
   query: string,
   params: any,
   callback: mysql.queryCallback
@@ -20,18 +21,14 @@ const searchInDatabase = (
         throw err;
       }
 
-      connection.query(
-        query,
-        params,
-        (err: mysql.MysqlError, results, fields) => {
-          connection.release();
-          if (!err) {
-            callback(err, results, fields);
-          } else {
-            callback(err);
-          }
+      connection.query(query, params, (err: mysql.MysqlError, results) => {
+        connection.release();
+        if (!err) {
+          callback(err, results);
+        } else {
+          callback(err);
         }
-      );
+      });
 
       connection.on("error", (err: mysql.MysqlError) => {
         connection.release();
@@ -42,4 +39,4 @@ const searchInDatabase = (
   );
 };
 
-export default searchInDatabase;
+export default database;

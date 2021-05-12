@@ -1,12 +1,12 @@
 import * as express from "express";
 import { Request, Response } from "express";
-import searchInDatabase from "../../database/database";
+import database from "../../database/database";
 import { MysqlError } from "mysql";
 
 const router = express.Router();
 
 router.get("/", (req: Request, res: Response) => {
-  searchInDatabase(
+  database(
     "SELECT produkte.produkt_id, produkte.bezeichnung, produkte.beschreibung, produkte.preis, produkte.inhaltsstoffe, produkte.allergene," +
       "produkte.bildPfad, produkte.urlPfad, kategorie.kategorie FROM produkte JOIN kategorie ON produkte.fk_kategorie = kategorie.kategorie_id",
     null,
