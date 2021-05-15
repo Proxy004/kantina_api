@@ -54,4 +54,15 @@ router.post("/loginUser", (req: Request, res: Response) => {
   );
 });
 
+router.get("/checkIfAdmin", (req: Request, res: Response) => {
+  database(
+    `SELECT mitarbeiter FROM benutzer WHERE email=?`,
+    [req.headers.email],
+    (err: MysqlError, results) => {
+      if (err) return res.status(500).json({ error: "Internal Server Error" });
+      return res.send(results);
+    }
+  );
+});
+
 export default router;

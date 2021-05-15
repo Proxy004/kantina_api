@@ -113,4 +113,43 @@ router.post("/newOrder", (req: Request, res: Response) => {
   });
 });
 
+router.get("/getOrders", (req: Request, res: Response) => {
+  database(
+    `SELECT bestellung.bestellung_id,bestellung.gesamtpreis, benutzer.vorname, benutzer.nachname, status.text, bestellung.abholzeit, bestellung.datum FROM benutzer JOIN bestellung ON benutzer.benutzer_id = bestellung.fk_benutzer JOIN status ON bestellung.fk_status = status.status_id ORDER BY bestellung.abholzeit ASC
+    `,
+    [],
+    (err: MysqlError, result) => {
+      if (err) {
+        console.log(err);
+        return res.status(406).json({
+          error: "An error occured while registering the order",
+        });
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+
+router.get("/getProductsOfOrder/:orderId", (req: Request, res: Response) => {
+  database(
+    `SELECT bestellung_artikel.menge, produkte.bezeichnung, produkte.preis
+    FROM bestellung_artikel JOIN produkte
+    ON bestellung_artikel.fk_produkte = produkte.produkt_id
+    WHERE bestellung_artikel.fk_bestellung = ?
+    `,
+    [req.params.orderId],
+    (err: MysqlError, result) => {
+      if (err) {
+        console.log(err);
+        return res.status(406).json({
+          error: "An error occured while registering the order",
+        });
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+
 export default router;
