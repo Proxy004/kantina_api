@@ -115,7 +115,7 @@ router.post("/newOrder", (req: Request, res: Response) => {
 
 router.get("/getOrders", (req: Request, res: Response) => {
   database(
-    `SELECT bestellung.bestellung_id,bestellung.gesamtpreis, benutzer.vorname, benutzer.nachname, status.text, bestellung.abholzeit, bestellung.datum FROM benutzer JOIN bestellung ON benutzer.benutzer_id = bestellung.fk_benutzer JOIN status ON bestellung.fk_status = status.status_id ORDER BY bestellung.abholzeit ASC
+    `SELECT bestellung.bestellung_id,bestellung.gesamtpreis, benutzer.vorname, benutzer.nachname, status.text, bestellung.abholzeit, bestellung.datum FROM benutzer JOIN bestellung ON benutzer.benutzer_id = bestellung.fk_benutzer JOIN status ON bestellung.fk_status = status.status_id WHERE status.text="Open" ORDER BY bestellung.abholzeit ASC
     `,
     [],
     (err: MysqlError, result) => {
@@ -147,6 +147,24 @@ router.get("/getProductsOfOrder/:orderId", (req: Request, res: Response) => {
         });
       } else {
         res.send(result);
+      }
+    }
+  );
+});
+
+router.post("/setOrderClosed/:orderId", (req: Request, res: Response) => {
+  database(
+    `UPDATE bestellung SET fk_status=? WHERE bestellung_id=?
+    `,
+    [2, req.params.orderId],
+    (err: MysqlError) => {
+      if (err) {
+        console.log(err);
+        return res.status(406).json({
+          error: "An error occured while registering the order",
+        });
+      } else {
+        res.sendStatus(200);
       }
     }
   );
