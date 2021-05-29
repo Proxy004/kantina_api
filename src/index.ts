@@ -10,7 +10,7 @@ import orders from "./routes/orders/orders";
 const app = express();
 
 //routes
-
+process.setMaxListeners(0);
 app.use(cors());
 
 app.use(morgan("dev"));

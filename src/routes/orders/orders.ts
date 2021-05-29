@@ -2,7 +2,8 @@ import * as express from "express";
 import { Request, Response } from "express";
 import database from "../../database/database";
 import { MysqlError } from "mysql";
-
+import * as bcrypt from "bcrypt";
+import { token } from "morgan";
 const router = express.Router();
 
 router.post("/newOrder", (req: Request, res: Response) => {
@@ -19,7 +20,7 @@ router.post("/newOrder", (req: Request, res: Response) => {
     pricefromOrder += element1.preis * element1.quantity;
   });
 
-  req.body.product.forEach((element) => {
+  req.body.product.forEach((element2) => {
     let str: string = req.body.time;
     let timeSplit = str.split(":");
     let stringToTime = new Date();
@@ -34,12 +35,12 @@ router.post("/newOrder", (req: Request, res: Response) => {
 
     database(
       `SELECT produkt_id,preis FROM produkte WHERE bezeichnung=?`,
-      [element.bezeichnung],
+      [element2.bezeichnung],
       (err: MysqlError, result) => {
         if (err) {
           return res.status(406).json({ error: "An error occured" });
         } else {
-          pricefromDb += parseFloat(result[0].preis);
+          pricefromDb += parseFloat(result[0].preis) * element2.quantity;
           if (pricefromOrder === pricefromDb) {
             database(
               `SELECT benutzer_id
@@ -65,10 +66,10 @@ router.post("/newOrder", (req: Request, res: Response) => {
                         });
                       } else {
                         idBestellung = result.insertId;
-                        req.body.product.forEach((element) => {
+                        req.body.product.forEach((element3) => {
                           database(
-                            `SELECT produkt_id FROM produkte WHERE produkte.bezeichnung=? `,
-                            [element.bezeichnung],
+                            `SELECT produkt_id FROM produkte WHERE produkte.bezeichnung=?`,
+                            [element3.bezeichnung],
                             (err: MysqlError, result) => {
                               idProdukt = result[0].produkt_id;
                               if (err) {
@@ -82,7 +83,7 @@ router.post("/newOrder", (req: Request, res: Response) => {
                                   `INSERT INTO bestellung_artikel(bestellung_artikel_id, menge, fk_bestellung, fk_produkte) VALUES (?,?,?,?)`,
                                   [
                                     null,
-                                    element.quantity,
+                                    element3.quantity,
                                     idBestellung,
                                     idProdukt,
                                   ],
@@ -106,6 +107,7 @@ router.post("/newOrder", (req: Request, res: Response) => {
                 }
               }
             );
+            return res.sendStatus(200);
           }
         }
       }
@@ -153,18 +155,42 @@ router.get("/getProductsOfOrder/:orderId", (req: Request, res: Response) => {
 });
 
 router.post("/setOrderClosed/:orderId", (req: Request, res: Response) => {
+  const hashString: string = req.body.token + req.body.loginDate.toString();
+
   database(
-    `UPDATE bestellung SET fk_status=? WHERE bestellung_id=?
+    `SELECT token FROM benutzer WHERE email=?
     `,
-    [2, req.params.orderId],
-    (err: MysqlError) => {
+    [req.body.email],
+    (err: MysqlError, result) => {
       if (err) {
         console.log(err);
         return res.status(406).json({
-          error: "An error occured while registering the order",
+          error: "An error occured while closing the order",
         });
       } else {
-        res.sendStatus(200);
+        bcrypt.compare(hashString, result[0].token).then(function (result) {
+          if (result) {
+            database(
+              `UPDATE bestellung SET fk_status=? WHERE bestellung_id=?
+                `,
+              [2, req.params.orderId],
+              (err: MysqlError) => {
+                if (err) {
+                  console.log(err);
+                  return res.status(406).json({
+                    error: "An error occured closing the order",
+                  });
+                } else {
+                  res.sendStatus(200);
+                }
+              }
+            );
+          } else {
+            return res.status(406).json({
+              error: "An error occured while closing the order",
+            });
+          }
+        });
       }
     }
   );
